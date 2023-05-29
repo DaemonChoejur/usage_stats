@@ -4,6 +4,8 @@ import android.app.usage.ConfigurationStats
 import android.content.Context
 import android.app.usage.UsageStatsManager
 import android.app.usage.UsageEvents
+import android.content.pm.ApplicationInfo
+import android.content.pm.PackageManager
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
@@ -80,15 +82,29 @@ object UsageStats {
 
         var usageList: ArrayList<Map<String, String>> = arrayListOf()
 
+        // Get the list of user-installed app package names
+        val packageManager = context.packageManager
+        val installedApps = packageManager.getInstalledApplications(PackageManager.GET_META_DATA)
+        val userInstalledPackages = ArrayList<String>()
+        for (appInfo in installedApps) {
+            if (appInfo.flags and ApplicationInfo.FLAG_SYSTEM == 0) {
+                // Add the package name of the user-installed app
+                userInstalledPackages.add(appInfo.packageName)
+            }
+        }
+
+//        filtering
         for (usage in usageStats) {
-            var u: Map<String, String> = mapOf(
+            if(userInstalledPackages.contains(usage.packageName)) {
+                var u: Map<String, String> = mapOf(
                     "firstTimeStamp" to usage.firstTimeStamp.toString(),
                     "lastTimeStamp" to usage.lastTimeStamp.toString(),
                     "lastTimeUsed" to usage.lastTimeUsed.toString(),
                     "packageName" to usage.packageName.toString(),
                     "totalTimeInForeground" to usage.totalTimeInForeground.toString()
-            )
-            usageList.add(u)
+                )
+                usageList.add(u)
+            }
         }
         return usageList
     }
