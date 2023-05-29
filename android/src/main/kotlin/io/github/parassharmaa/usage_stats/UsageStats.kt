@@ -116,15 +116,29 @@ object UsageStats {
 
         var usageList = mutableMapOf<String, Map<String, String>>()
 
+
+          // Get the list of user-installed app package names
+        val packageManager = context.packageManager
+        val installedApps = packageManager.getInstalledApplications(PackageManager.GET_META_DATA)
+        val userInstalledPackages = ArrayList<String>()
+        for (appInfo in installedApps) {
+            if (appInfo.flags and ApplicationInfo.FLAG_SYSTEM == 0) {
+                // Add the package name of the user-installed app
+                userInstalledPackages.add(appInfo.packageName)
+            }
+        }
+
         for (packageName in usageStats.keys) {
-            var packageUsage = usageStats[packageName]
-            usageList[packageName] = mapOf(
-                    "firstTimeStamp" to packageUsage?.firstTimeStamp.toString(),
-                    "lastTimeStamp" to packageUsage?.lastTimeStamp.toString(),
-                    "lastTimeUsed" to packageUsage?.lastTimeUsed.toString(),
-                    "packageName" to packageUsage?.packageName.toString(),
-                    "totalTimeInForeground" to packageUsage?.totalTimeInForeground.toString()
-            )
+            if(userInstalledPackages.contains(packageName)) {
+                var packageUsage = usageStats[packageName]
+                usageList[packageName] = mapOf(
+                        "firstTimeStamp" to packageUsage?.firstTimeStamp.toString(),
+                        "lastTimeStamp" to packageUsage?.lastTimeStamp.toString(),
+                        "lastTimeUsed" to packageUsage?.lastTimeUsed.toString(),
+                        "packageName" to packageUsage?.packageName.toString(),
+                        "totalTimeInForeground" to packageUsage?.totalTimeInForeground.toString()
+                )
+             }
         }
         return usageList
     }
